@@ -9,21 +9,30 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 
 const ETHEREUM_MAINNET =
-  "https://eth-mainnet.g.alchemy.com/v2/j3OuXRcqfffV7WHPHN2G-1JcHCaOJL6H";
+  "https://eth-mainnet.g.alchemy.com/v2/dVfk0JbYlzHpMU000lJZ39hrwf0f818u";
+
+const POLYGON_MAINNET =
+  "https://polygon-mainnet.g.alchemy.com/v2/5H1rrcYkvbpo6sTW4hrOhH7glU6GHQ4v";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.9",
-  gasReporter: {
-    enabled: true,
+  // gasReporter: {
+  //   enabled: true,
+  // },
+  etherscan: {
+    apiKey: "5RNGZU9UMNDE2G7DID88S2WSD5G9WSIHKJ",
   },
   networks: {
     hardhat: {
       forking: {
-        url: `${ETHEREUM_MAINNET}`,
+        url: ETHEREUM_MAINNET,
         blockNumber: 16500000,
       },
       chainId: 1,
       allowUnlimitedContractSize: true,
+    },
+    polygon: {
+      url: POLYGON_MAINNET,
     },
   },
 };

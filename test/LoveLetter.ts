@@ -13,10 +13,11 @@ describe("LoveLetter", function () {
     const owner = await ethers.getImpersonatedSigner(
       "0x79f67f689B9925710D4ddA2A39d680E9CeA61C81"
     );
-
     console.log("Deploying contract...with owner: ", owner.address);
 
     const LoveLetter = await ethers.getContractFactory("LoveLetter", owner);
+    console.log("teste");
+
     const contract = await LoveLetter.deploy(addressOne, addressTwo, {
       value: initialAmount,
     });
@@ -28,26 +29,24 @@ describe("LoveLetter", function () {
   }
 
   // Testing the contract functions
-  describe("Test the contract", function () {
-    it("Should deploy the contract", async function () {
-      // Fetch Errors
-      try {
-        // Deployment
-        const { contract, owner, addressOne, addressTwo } = await deployment();
-        const ownerOf = await contract.ownerOf(1);
-        expect(ownerOf).to.equal(contract.address);
+  context("Test the contract", async function () {
+    // Fetch Errors
+    try {
+      // Deployment
+      const { contract, owner, addressOne, addressTwo } = await deployment();
+      const ownerOf = await contract.ownerOf(1);
+      expect(ownerOf).to.equal(contract.address);
 
-        // Global contract deployed
-        // Fetch NFT statuses
-        context("Should fetch the partners", async function () {
-          const data = await contract.getPartnersData();
-          expect(data[0]).to.equal(addressOne);
-          expect(data[1]).to.equal(addressTwo);
-          expect(data[2]).to.equal(1);
-        });
-      } catch (e) {
-        console.log(e);
-      }
-    });
+      // Global contract deployed
+      // Fetch NFT statuses
+      it("Should fetch the partners", async function () {
+        const data = await contract.usAll();
+        expect(data[0]).to.equal(addressOne);
+        expect(data[1]).to.equal(addressTwo);
+        expect(data[2]).to.equal(1);
+      });
+    } catch (e) {
+      console.log(e);
+    }
   });
 });
