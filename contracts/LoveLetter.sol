@@ -12,20 +12,19 @@ import "./ILoveLetter.sol";
  * @notice This is a singular and elegant present for the girl of my dreams...
  */
 contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
-    string uri =
-        "https://gateway.pinata.cloud/ipfs/QmdVHtuvNP7bcAXDtZmkxH7bo1DKuwzMZD6sq4g8WE9P3w/";
+    string uri = "ipfs://QmaTCreYwotWwdbPn6wZvK78UtHSZpc6DGYVw5kfXZXiJf/";
 
     mapping(bytes32 => string) public stories;
 
     Partners public us;
     Votes votes;
 
-    uint256 public DAY = 24 * 60 * 60;
-    uint256 public MONTH = 31 * DAY;
-    uint256 public QUARTER = 3 * MONTH;
-    uint256 public CLOCK;
+    uint256 DAY = 24 * 60 * 60;
+    uint256 MONTH = 31 * DAY;
+    uint256 QUARTER = 3 * MONTH;
+    uint256 CLOCK;
 
-    constructor(address _l, address _ll) ERC721("I Love You", "LOVERS") {
+    constructor(address _l, address _ll) ERC721("I Love You", "LOVE") {
         CLOCK = block.timestamp;
 
         us.l = _l;
@@ -61,11 +60,10 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
             us.record = currentEpoch();
             us.hp += 1;
             if (abi.encodePacked(_msg).length > 0) {
-                stories[hashproof()] = _msg;
+                stories[hashproof(us.record)] = _msg;
             }
+            emit Validated(block.timestamp);
         } // validates the epoch
-
-        emit Validated(block.timestamp);
     }
 
     function missingHp() public view returns (uint256) {
@@ -103,8 +101,8 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
         return (block.timestamp - CLOCK);
     }
 
-    function hashproof() public view returns (bytes32) {
-        return keccak256(abi.encodePacked(us.l, us.ll, block.timestamp));
+    function hashproof(uint256 _record) internal view returns (bytes32) {
+        return keccak256(abi.encodePacked(us.l, us.ll, _record));
     }
 
     function _baseURI() internal view override returns (string memory) {
@@ -121,6 +119,14 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
         emit Burn(us.l, us.ll, us.record);
 
         payable(msg.sender).transfer(address(this).balance);
+    }
+
+    function setURI(string memory _uri) public {
+        require(
+            msg.sender == us.l || msg.sender == us.ll,
+            "LoveLetter: Only lovers can set the URI."
+        );
+        uri = _uri;
     }
 
     function onERC721Received(
