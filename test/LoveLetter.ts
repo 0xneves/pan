@@ -5,7 +5,7 @@ const { ethers } = require("hardhat");
 // Describing this contract
 describe("LoveLetter", function () {
   let contract: Contract;
-  const initialAmount = ethers.utils.parseEther("0.1");
+  const initialAmount = ethers.utils.parseEther("0.01");
   const addressOne = "0x203520F4ec42Ea39b03F62B20e20Cf17DB5fdfA7";
   const addressTwo = "0xdB3c617cDd2fBf0bb4309C325F47678e37F096D9";
 

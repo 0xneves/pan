@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17
-;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
@@ -14,21 +13,19 @@ import "./ILoveLetter.sol";
  */
 contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
     string uri =
-        "https://gateway.pinata.cloud/ipfs/QmQa3conern34JY4YGkW6BkjuN3VvyLNkwnFVhpJ32VxEg";
-    Partners public us;
-    Votes votes;
+        "https://gateway.pinata.cloud/ipfs/QmdVHtuvNP7bcAXDtZmkxH7bo1DKuwzMZD6sq4g8WE9P3w/";
 
     mapping(bytes32 => string) public stories;
+
+    Partners public us;
+    Votes votes;
 
     uint256 public DAY = 24 * 60 * 60;
     uint256 public MONTH = 31 * DAY;
     uint256 public QUARTER = 3 * MONTH;
     uint256 public CLOCK;
 
-    constructor(
-        address _l,
-        address _ll
-    ) payable ERC721("I Love You", "LOVERS") {
+    constructor(address _l, address _ll) ERC721("I Love You", "LOVERS") {
         CLOCK = block.timestamp;
 
         us.l = _l;
@@ -40,11 +37,12 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
         emit Bounded(_l, _ll);
     }
 
-    function updateRelation(string memory _msg) public {
-        require(virtualHp() > 0, "Game Over.");
+    function updateRelation(string memory _msg) public payable {
+        require(msg.value >= 0.01 ether, "LoveLetter: Not enough ETH.");
+        require(virtualHp() > 0, "LoveLetter: Game Over.");
         require(
             us.record < currentEpoch(),
-            "You already intaracted in this quarter"
+            "LoveLetter: You already intaracted in this quarter"
         );
 
         if (missingHp() > 0) {

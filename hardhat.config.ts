@@ -7,12 +7,16 @@ import "@nomiclabs/hardhat-solhint";
 import "@nomiclabs/hardhat-truffle5";
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
+import dotenv from "dotenv";
+dotenv.config();
 
 const ETHEREUM_MAINNET =
   "https://eth-mainnet.g.alchemy.com/v2/dVfk0JbYlzHpMU000lJZ39hrwf0f818u";
 
 const POLYGON_MAINNET =
   "https://polygon-mainnet.g.alchemy.com/v2/5H1rrcYkvbpo6sTW4hrOhH7glU6GHQ4v";
+
+const { PRIVATE_KEY } = process.env;
 
 const config: HardhatUserConfig = {
   solidity: "0.8.17",
@@ -21,7 +25,7 @@ const config: HardhatUserConfig = {
   //   enabled: true,
   // },
   etherscan: {
-    apiKey: "5RNGZU9UMNDE2G7DID88S2WSD5G9WSIHKJ",
+    apiKey: "U5CSWDUSV4PWJXAK23SUK6MVITQSVYZXV7",
   },
   networks: {
     hardhat: {
@@ -33,6 +37,7 @@ const config: HardhatUserConfig = {
     },
     polygon: {
       url: POLYGON_MAINNET,
+      accounts: [`${PRIVATE_KEY}`],
     },
   },
 };
