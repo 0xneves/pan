@@ -15,7 +15,8 @@ const POLYGON_MAINNET =
   "https://polygon-mainnet.g.alchemy.com/v2/5H1rrcYkvbpo6sTW4hrOhH7glU6GHQ4v";
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.9",
+  solidity: "0.8.17",
+  defaultNetwork: "hardhat",
   // gasReporter: {
   //   enabled: true,
   // },
@@ -26,9 +27,8 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: ETHEREUM_MAINNET,
-        blockNumber: 16500000,
+        blockNumber: 16492821,
       },
-      chainId: 1,
       allowUnlimitedContractSize: true,
     },
     polygon: {
