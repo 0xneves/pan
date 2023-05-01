@@ -19,7 +19,7 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
     Partners public us;
     Votes votes;
 
-    uint256 DAY = 24 * 60 * 60;
+    uint256 DAY = 24 * 60 * 60; // 1 days is now a available function, does it hold months?
     uint256 MONTH = 31 * DAY;
     uint256 QUARTER = 3 * MONTH;
     uint256 CLOCK;

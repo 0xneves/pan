@@ -10,11 +10,9 @@ import "@nomiclabs/hardhat-etherscan";
 import dotenv from "dotenv";
 dotenv.config();
 
-const ETHEREUM_MAINNET =
-  "https://eth-mainnet.g.alchemy.com/v2/dVfk0JbYlzHpMU000lJZ39hrwf0f818u";
+const ETHEREUM_MAINNET = "https://eth-mainnet.g.alchemy.com/v2/dVfk0JbYlzHpMU000lJZ39hrwf0f818u";
 
-const POLYGON_MAINNET =
-  "https://polygon-mainnet.g.alchemy.com/v2/5H1rrcYkvbpo6sTW4hrOhH7glU6GHQ4v";
+const POLYGON_MAINNET = "https://polygon-mainnet.g.alchemy.com/v2/5H1rrcYkvbpo6sTW4hrOhH7glU6GHQ4v";
 
 const { PRIVATE_KEY } = process.env;
 
