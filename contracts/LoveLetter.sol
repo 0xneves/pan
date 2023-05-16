@@ -50,7 +50,7 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
 
         if (msg.sender == us.l && votes.l != virtualEpoch()) {
             votes.l = virtualEpoch();
-        } // votes for l
+        } // votes for l 
 
         if (msg.sender == us.ll && votes.ll != virtualEpoch()) {
             votes.ll = virtualEpoch();
