@@ -23,7 +23,6 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
 
     uint256 DAY = 1 days;
     uint256 EPOCH = 12 weeks;
-
     uint256 CLOCK;
 
     constructor(address _l, address _ll) ERC721("I Love You", "LOVE") {
@@ -32,7 +31,6 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
         us.l = _l;
         us.ll = _ll;
         us.hp = 1;
-        // us.record = currentEpoch();
 
         _safeMint(address(this), 1);
         emit Bounded(_l, _ll);
@@ -42,8 +40,12 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
         string memory _msg,
         string memory _uri
     ) public payable {
-        require(msg.value >= 0.01 ether, "LoveLetter: Not enough ETH.");
+        require(
+            msg.sender == us.l || msg.sender == us.ll,
+            "LoveLetter: Not a partner."
+        );
         require(virtualHp() > 0, "LoveLetter: Game Over.");
+        require(msg.value >= 0.01 ether, "LoveLetter: Not enough ETH.");
         require(
             us.record < currentEpoch(),
             "LoveLetter: You already intaracted in this quarter"
@@ -55,12 +57,10 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
 
         if (msg.sender == us.l && votes.l != virtualEpoch()) {
             votes.l = virtualEpoch();
-            setURI("pedra");
         } // votes for l
 
         if (msg.sender == us.ll && votes.ll != virtualEpoch()) {
             votes.ll = virtualEpoch();
-            setURI("bunda");
         } // votes for ll
 
         if (votes.l == virtualEpoch() && votes.ll == virtualEpoch()) {
@@ -70,7 +70,7 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
                 stories[hashproof(us.record)] = _msg;
             }
             if (abi.encodePacked(_uri).length > 0) {
-                setURI(_uri);
+                uri = _uri;
             }
             emit Validated(block.timestamp);
         } // validates the epoch
@@ -129,10 +129,6 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
         emit Burn(us.l, us.ll, us.record);
 
         payable(msg.sender).transfer(address(this).balance);
-    }
-
-    function setURI(string memory _uri) internal {
-        uri = _uri;
     }
 
     function onERC721Received(
