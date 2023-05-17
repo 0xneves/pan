@@ -19,9 +19,9 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
     Partners public us;
     Votes votes;
 
-    uint256 DAY = 24 * 60 * 60; // 1 days is now a available function, does it hold months?
-    uint256 MONTH = 31 * DAY;
-    uint256 QUARTER = 3 * MONTH;
+    uint256 DAY = 1 days;
+    uint256 EPOCH = 12 weeks;
+
     uint256 CLOCK;
 
     constructor(address _l, address _ll) ERC721("I Love You", "LOVE") {
@@ -90,7 +90,7 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
     }
 
     function currentEpoch() public view returns (uint256) {
-        return (timeSince() / QUARTER) + 1;
+        return (timeSince() / EPOCH) + 1;
     }
 
     function virtualEpoch() public view returns (uint256) {
