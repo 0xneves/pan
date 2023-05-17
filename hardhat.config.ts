@@ -22,7 +22,7 @@ const config: HardhatUserConfig = {
   // gasReporter: {
   //   enabled: true,
   // },
-  etherscan: {
+  etherscan: { // PolygonScan actually
     apiKey: "U5CSWDUSV4PWJXAK23SUK6MVITQSVYZXV7",
   },
   networks: {
