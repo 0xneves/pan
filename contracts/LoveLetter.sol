@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./ILoveLetter.sol";
 
+import "hardhat/console.sol";
+
 /** - v1.0.0
  * @title LoveLetter. An ownerless base contract that scores addresses
  *        interactions on-chain through NFTs.
@@ -30,13 +32,16 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
         us.l = _l;
         us.ll = _ll;
         us.hp = 1;
-        us.record = currentEpoch();
+        // us.record = currentEpoch();
 
         _safeMint(address(this), 1);
         emit Bounded(_l, _ll);
     }
 
-    function updateRelation(string memory _msg) public payable {
+    function updateRelation(
+        string memory _msg,
+        string memory _uri
+    ) public payable {
         require(msg.value >= 0.01 ether, "LoveLetter: Not enough ETH.");
         require(virtualHp() > 0, "LoveLetter: Game Over.");
         require(
@@ -50,10 +55,12 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
 
         if (msg.sender == us.l && votes.l != virtualEpoch()) {
             votes.l = virtualEpoch();
-        } // votes for l 
+            setURI("pedra");
+        } // votes for l
 
         if (msg.sender == us.ll && votes.ll != virtualEpoch()) {
             votes.ll = virtualEpoch();
+            setURI("bunda");
         } // votes for ll
 
         if (votes.l == virtualEpoch() && votes.ll == virtualEpoch()) {
@@ -61,6 +68,9 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
             us.hp += 1;
             if (abi.encodePacked(_msg).length > 0) {
                 stories[hashproof(us.record)] = _msg;
+            }
+            if (abi.encodePacked(_uri).length > 0) {
+                setURI(_uri);
             }
             emit Validated(block.timestamp);
         } // validates the epoch
@@ -121,11 +131,7 @@ contract LoveLetter is ERC721, ILoveLetter, IERC721Receiver {
         payable(msg.sender).transfer(address(this).balance);
     }
 
-    function setURI(string memory _uri) public {
-        require(
-            msg.sender == us.l || msg.sender == us.ll,
-            "LoveLetter: Only lovers can set the URI."
-        );
+    function setURI(string memory _uri) internal {
         uri = _uri;
     }
 
