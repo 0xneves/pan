@@ -14,8 +14,6 @@ interface INFT {
 
     function getMissingHealth() external view returns (uint256);
 
-    function getVirtualHealth() external view returns (uint256);
-
     function getLastEpoch() external view returns (uint256);
 
     function getTotalMembers() external view returns (uint256);

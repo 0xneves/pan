@@ -29,10 +29,20 @@ contract Governance is Context, Party, Math {
         return decompose(votes[partyId]);
     }
 
-    function addressBelongs(
+    function addrIsMember(
         bytes32 partyId,
         address addr
     ) public view returns (bool) {
         return belong[partyId][addr];
+    }
+
+    function getMembersOf(
+        bytes32 partyId
+    ) public view returns (address[] memory) {
+        return _getMembersOf(partyId);
+    }
+
+    function getTotalMembersOf(bytes32 partyId) public view returns (uint256) {
+        return _getTotalMembersOf(partyId);
     }
 }

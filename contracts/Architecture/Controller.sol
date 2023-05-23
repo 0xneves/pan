@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
 import "./Governance.sol";
 import "./Deployer.sol";
 import "./Context.sol";
 
-import "./interfaces/INFT.sol";
-import "./interfaces/IOwnable.sol";
+import "./NFT.sol";
+
+import "./interfaces/IHelper.sol";
 import "./interfaces/IController.sol";
 import "./helpers/Epoch.sol";
-
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 error AlreadyAccepted();
 error AlreadyUpgraded();
@@ -26,9 +27,23 @@ contract Controller is
     Deployer,
     Epoch
 {
+    function deploy() public {
+        // _deploy();
+    }
+
+    function senderIsIndexed(
+        bytes32 partyId,
+        uint256 index
+    ) public view returns (bool) {
+        address[] memory members = getMembersOf(partyId);
+        return
+            msg.sender == members[index] ||
+            msg.sender == IHelper(members[index]).owner();
+    }
+
     function vote(bytes32 partyId, uint256 index) public {
         // Governance - Must be valid voter
-        if (!addressBelongs(partyId, msg.sender)) {
+        if (!addrIsMember(partyId, msg.sender)) {
             revert InvalidMember();
         }
 
@@ -38,7 +53,7 @@ contract Controller is
         }
 
         // Governance - Vote already accepted
-        if (voteAccepted(partyId)) {
+        if (voteIsAccepted(partyId)) {
             revert AlreadyAccepted();
         }
 
@@ -50,34 +65,38 @@ contract Controller is
         _vote(partyId, index);
     }
 
-    function voteAccepted(bytes32 partyId) public view returns (bool) {
+    function voteIsAccepted(bytes32 partyId) public view returns (bool) {
         return 2 ** _contractOf(partyId).getTotalMembers() == votesFor(partyId);
     }
 
-    function health(bytes32 partyId) public view returns (uint256) {
+    function getHealthFrom(bytes32 partyId) public view returns (uint256) {
         return _contractOf(partyId).getHealth();
     }
 
-    function missingHealth(bytes32 partyId) public view returns (uint256) {
+    function getMissingHealthFrom(
+        bytes32 partyId
+    ) public view returns (uint256) {
         return _contractOf(partyId).getMissingHealth();
     }
 
-    function virtualHealth(bytes32 partyId) public view returns (uint256) {
-        return _contractOf(partyId).getVirtualHealth();
+    function getCurrentEpoch() public view returns (uint256) {
+        return currentEpoch();
     }
 
-    function senderIsIndexed(
-        bytes32 partyId,
-        uint256 index
-    ) public view returns (bool) {
-        address[] memory members = membersOf(partyId);
-        return
-            msg.sender == members[index] ||
-            msg.sender == IOwnable(members[index]).owner();
+    function getVirtualEpoch() public view returns (uint256) {
+        return virtualEpoch();
     }
 
-    function _contractOf(bytes32 partyId) internal view returns (INFT) {
-        return INFT(deployedAddr(partyId));
+    function getLifeSpan() public view returns (uint256) {
+        return lifespan();
+    }
+
+    function getDeployTime() public view returns (uint256) {
+        return deployTime();
+    }
+
+    function _contractOf(bytes32 partyId) internal view returns (IHelper) {
+        return IHelper(deployedAddr(partyId));
     }
 
     function supportsInterface(

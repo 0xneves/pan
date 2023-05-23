@@ -11,19 +11,19 @@ contract Epoch {
         DEPLOY_TIME = block.timestamp;
     }
 
-    function currentEpoch() public view returns (uint256) {
+    function currentEpoch() internal view returns (uint256) {
         return (lifespan() / EPOCH) + 1;
     }
 
-    function virtualEpoch() public view returns (uint256) {
+    function virtualEpoch() internal view returns (uint256) {
         return currentEpoch() + 1;
     }
 
-    function lifespan() public view returns (uint256) {
+    function lifespan() internal view returns (uint256) {
         return (block.timestamp - DEPLOY_TIME);
     }
 
-    function deployTime() public view returns (uint256) {
+    function deployTime() internal view returns (uint256) {
         return DEPLOY_TIME;
     }
 }

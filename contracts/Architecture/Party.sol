@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+// import "./NFT.sol";
+
 contract Party {
     mapping(bytes32 => address[]) private members;
 
@@ -8,9 +10,15 @@ contract Party {
 
     function join(bytes32 partyId, uint256 index) public {}
 
-    function membersOf(bytes32 partyId) public view returns (address[] memory) {
+    function _getMembersOf(
+        bytes32 partyId
+    ) internal view returns (address[] memory) {
         return members[partyId];
     }
 
-    
+    function _getTotalMembersOf(
+        bytes32 partyId
+    ) internal view returns (uint256) {
+        return members[partyId].length;
+    }
 }

@@ -1,26 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
 import "./interfaces/INFT.sol";
 import "./helpers/Health.sol";
 
 import "./interfaces/IController.sol";
 
-contract NFT is INFT, ERC721, Health {
+contract NFT is INFT, IERC165, ERC721, Health {
     IController public CONTROLLER;
     string public URI;
 
-    uint256 private lastEpoch;
-    uint256 private totalMembers;
+    uint256 private LAST_EPOCH;
+    uint256 private TOTAL_MEMBERS;
 
     constructor(
-        string memory _uri,
+        address _controller,
         uint256 _totalMembers,
-        address _controller
-    ) ERC721("LifesPan", "PAN") {
+        string memory _name,
+        string memory _symbol,
+        string memory _uri
+    ) ERC721(_name, _symbol) {
         URI = _uri;
-        totalMembers = _totalMembers;
+        TOTAL_MEMBERS = _totalMembers;
         CONTROLLER = IController(_controller);
     }
 
@@ -55,39 +61,31 @@ contract NFT is INFT, ERC721, Health {
     function changeBaseURI() public {}
 
     function getHealth() public view returns (uint256) {
-        return _getHealth();
+        return _getHealth(LAST_EPOCH, CONTROLLER.getCurrentEpoch());
     }
 
     function getMissingHealth() public view returns (uint256) {
-        return _missingHealth(lastEpoch, currentEpoch());
-    }
-
-    function getVirtualHealth() public view returns (uint256) {
-        return _virtualHealth();
+        return _missingHealth(LAST_EPOCH, CONTROLLER.getCurrentEpoch());
     }
 
     function getLastEpoch() public view returns (uint256) {
-        return lastEpoch;
+        return LAST_EPOCH;
     }
 
     function getTotalMembers() public view returns (uint256) {
-        return totalMembers;
+        return TOTAL_MEMBERS;
     }
 
-    function hashproof(uint256 _record) internal view returns (bytes32) {}
-
-    function _baseURI() internal view override returns (string memory) {}
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) public pure returns (bytes4) {
-        return this.onERC721Received.selector;
+    function _baseURI() internal view override returns (string memory) {
+        return URI;
     }
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, INFT) returns (bool) {}
+    ) public pure override(IERC165, ERC721, INFT) returns (bool) {
+        return
+            interfaceId == type(IERC165).interfaceId ||
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(INFT).interfaceId;
+    }
 }
