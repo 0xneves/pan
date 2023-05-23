@@ -3,50 +3,36 @@ pragma solidity ^0.8.17;
 
 import "./helpers/Math.sol";
 import "./Party.sol";
+import "./Context.sol";
 
-error InvalidMember(address);
+error AlreadyVoted();
 
-contract Governance is Party {
+contract Governance is Context, Party, Math {
     mapping(bytes32 => mapping(address => bool)) private belong;
     mapping(bytes32 => uint256) private votes;
 
-    function _vote(
-        bytes32 partyId,
-        uint256 index,
-        address addr,
-        uint256 currEpoch
-    ) internal {
-        // Must be valid voter
-        if (!validMember(partyId, index)) {
-            revert InvalidMember(msg.sender);
+    function _vote(bytes32 partyId, uint256 index) internal {
+        if (hasVoted(votes[partyId], index)) {
+            revert AlreadyVoted();
         }
 
-        // Can only happen during an Epoch. Resets every new Epoch.
+        votes[partyId] += 2 ** index;
     }
 
-    function votesFor(bytes32 partyId) public view returns (uint256) {}
+    function votesFor(bytes32 partyId) public view returns (uint256) {
+        return votes[partyId];
+    }
 
-    function whoVotedFor(
+    function alreadyVoted(
         bytes32 partyId
     ) public view returns (uint256[] memory) {
-        // Lib - Decompose the votes map
-        // This - Return every index of the party that voted
+        return decompose(votes[partyId]);
     }
 
     function addressBelongs(
-        address addr,
-        bytes32 partyId
-    ) public view returns (bool) {}
-
-    function validMember(
         bytes32 partyId,
-        uint256 index
+        address addr
     ) public view returns (bool) {
-        address[] memory partners = membersOf(partyId);
-        return msg.sender == partners[index];
+        return belong[partyId][addr];
     }
-
-    function myIndex() public view returns (uint256) {}
-
-    function indexOfAddr() public view returns (uint256) {}
 }

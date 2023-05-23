@@ -6,7 +6,11 @@ contract Party {
 
     function create(address[] memory addrs) public returns (bytes32) {}
 
-    function join(bytes32 proof, uint256 index) public {}
+    function join(bytes32 partyId, uint256 index) public {}
 
-    function membersOf(bytes32 proof) public view returns (address[] memory) {}
+    function membersOf(bytes32 partyId) public view returns (address[] memory) {
+        return members[partyId];
+    }
+
+    
 }
