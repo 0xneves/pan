@@ -2,6 +2,13 @@
 pragma solidity ^0.8.17;
 
 interface IController {
+    function deploy(
+        bytes32 partyId,
+        string memory name,
+        string memory symbol,
+        string memory uri
+    ) external;
+
     function senderIsIndexed(
         bytes32 partyId,
         uint256 index

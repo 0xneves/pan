@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./interfaces/IEpoch.sol";
-
 contract Epoch {
     uint256 private DEPLOY_TIME;
     uint256 private EPOCH = 12 weeks;

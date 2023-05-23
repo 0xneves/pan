@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-// import "./NFT.sol";
-
 contract Party {
     mapping(bytes32 => address[]) private members;
 

@@ -3,11 +3,10 @@ pragma solidity ^0.8.17;
 
 import "./helpers/Math.sol";
 import "./Party.sol";
-import "./Context.sol";
 
 error AlreadyVoted();
 
-contract Governance is Context, Party, Math {
+contract Governance is Party, Math {
     mapping(bytes32 => mapping(address => bool)) private belong;
     mapping(bytes32 => uint256) private votes;
 

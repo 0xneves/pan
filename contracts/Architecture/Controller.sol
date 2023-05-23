@@ -5,30 +5,45 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import "./Governance.sol";
 import "./Deployer.sol";
-import "./Context.sol";
 
-import "./NFT.sol";
-
+import "./interfaces/INFT.sol";
 import "./interfaces/IHelper.sol";
 import "./interfaces/IController.sol";
 import "./helpers/Epoch.sol";
 
+error AllMustVote();
 error AlreadyAccepted();
 error AlreadyUpgraded();
-error NotEveryoneVoted();
 error InvalidMember();
 error InvalidIndex();
+error NotEveryoneVoted();
 
-contract Controller is
-    IController,
-    IERC165,
-    Context,
-    Governance,
-    Deployer,
-    Epoch
-{
-    function deploy() public {
-        // _deploy();
+contract Controller is IController, IERC165, Governance, Deployer, Epoch {
+    function deploy(
+        bytes32 partyId,
+        string memory name,
+        string memory symbol,
+        string memory uri
+    ) public {
+        // vote must be approved, meaning all members have joined and voted
+        if (!voteIsAccepted(partyId)) {
+            revert AllMustVote();
+        }
+
+        // msg.sender must be in the group
+        if (!addrIsMember(partyId, msg.sender)) {
+            revert InvalidMember();
+        }
+
+        // deploy the NFT contract
+        _deploy(
+            partyId,
+            address(this),
+            getTotalMembersOf(partyId),
+            name,
+            symbol,
+            uri
+        );
     }
 
     function senderIsIndexed(
@@ -66,7 +81,7 @@ contract Controller is
     }
 
     function voteIsAccepted(bytes32 partyId) public view returns (bool) {
-        return 2 ** _contractOf(partyId).getTotalMembers() == votesFor(partyId);
+        return 2 ** _getTotalMembersOf(partyId) == votesFor(partyId);
     }
 
     function getHealthFrom(bytes32 partyId) public view returns (uint256) {
@@ -95,8 +110,8 @@ contract Controller is
         return deployTime();
     }
 
-    function _contractOf(bytes32 partyId) internal view returns (IHelper) {
-        return IHelper(deployedAddr(partyId));
+    function _contractOf(bytes32 partyId) internal view returns (INFT) {
+        return INFT(deployedAddr(partyId));
     }
 
     function supportsInterface(

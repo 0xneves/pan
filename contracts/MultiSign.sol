@@ -25,7 +25,6 @@ contract MultiSign {
         for (uint256 i; i < addrs.length; i++) {
             if (
                 msg.sender == IsContract(addrs[i]).owner() ||
-                msg.sender == tx.origin ||
                 msg.sender == addrs[i]
             ) {
                 belong[msg.sender][proof] = true;

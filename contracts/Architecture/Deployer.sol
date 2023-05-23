@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {NFT} from "./NFT.sol";
+
+error AlreadyDeployed();
+
 contract Deployer {
     mapping(bytes32 => address) private deployed;
 
@@ -12,6 +16,10 @@ contract Deployer {
         string memory symbol,
         string memory uri
     ) internal {
+        if (deployed[partyId] != address(0)) {
+            revert AlreadyDeployed();
+        }
+
         NFT newContractB = new NFT(
             controllerAddr,
             totalMembers,
