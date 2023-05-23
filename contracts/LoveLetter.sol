@@ -3,9 +3,9 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "./ILoveLetter.sol";
 
-import "hardhat/console.sol";
+import "./ILoveLetter.sol";
+import "./MultiSign.sol";
 
 /** - v1.0.0
  * @title LoveLetter. An ownerless base contract that scores addresses
