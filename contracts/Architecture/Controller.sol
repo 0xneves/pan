@@ -7,7 +7,6 @@ import "./Governance.sol";
 import "./Deployer.sol";
 
 import "./interfaces/INFT.sol";
-import "./interfaces/IHelper.sol";
 import "./interfaces/IController.sol";
 import "./helpers/Epoch.sol";
 
@@ -46,30 +45,20 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         );
     }
 
-    function senderIsIndexed(
-        bytes32 partyId,
-        uint256 index
-    ) public view returns (bool) {
-        address[] memory members = getMembersOf(partyId);
-        return
-            msg.sender == members[index] ||
-            msg.sender == IHelper(members[index]).owner();
-    }
-
     function vote(bytes32 partyId, uint256 index) public {
+        // Governance - Vote already accepted
+        if (voteIsAccepted(partyId)) {
+            revert AlreadyAccepted();
+        }
+
         // Governance - Must be valid voter
         if (!addrIsMember(partyId, msg.sender)) {
             revert InvalidMember();
         }
 
         // Governance - Not your index
-        if (!senderIsIndexed(partyId, index)) {
+        if (!addrIsIndexed(partyId, index, msg.sender)) {
             revert InvalidIndex();
-        }
-
-        // Governance - Vote already accepted
-        if (voteIsAccepted(partyId)) {
-            revert AlreadyAccepted();
         }
 
         // Epoch - Can only happen one Epoch at a time.
@@ -78,10 +67,6 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         }
 
         _vote(partyId, index);
-    }
-
-    function voteIsAccepted(bytes32 partyId) public view returns (bool) {
-        return 2 ** _getTotalMembersOf(partyId) == votesFor(partyId);
     }
 
     function getHealthFrom(bytes32 partyId) public view returns (uint256) {

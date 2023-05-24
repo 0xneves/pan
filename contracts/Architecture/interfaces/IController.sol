@@ -9,14 +9,7 @@ interface IController {
         string memory uri
     ) external;
 
-    function senderIsIndexed(
-        bytes32 partyId,
-        uint256 index
-    ) external view returns (bool);
-
     function vote(bytes32 partyId, uint256 index) external;
-
-    function voteIsAccepted(bytes32 partyId) external view returns (bool);
 
     function getHealthFrom(bytes32 partyId) external view returns (uint256);
 

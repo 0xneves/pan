@@ -20,14 +20,14 @@ contract Deployer {
             revert AlreadyDeployed();
         }
 
-        NFT newContractB = new NFT(
+        NFT SoulBounded = new NFT(
             controllerAddr,
             totalMembers,
             name,
             symbol,
             uri
         );
-        deployed[partyId] = address(newContractB);
+        deployed[partyId] = address(SoulBounded);
     }
 
     function deployedAddr(bytes32 partyId) internal view returns (address) {

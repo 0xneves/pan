@@ -1,12 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "./interfaces/IHelper.sol";
+
+error PartyAlreadyCreated();
+
 contract Party {
     mapping(bytes32 => address[]) private members;
 
-    function create(address[] memory addrs) public returns (bytes32) {}
+    function _create(bytes32 partyId, address[] memory addrs) internal {
+        if (_getTotalMembersOf(partyId) > 0) {
+            revert PartyAlreadyCreated();
+        }
 
-    function join(bytes32 partyId, uint256 index) public {}
+        members[partyId] = addrs;
+    }
+
+    function _canJoin(
+        bytes32 partyId,
+        uint256 index,
+        address addr
+    ) internal view returns (bool) {
+        return
+            addr == members[partyId][index] ||
+            addr == IHelper(members[partyId][index]).owner();
+    }
 
     function _getMembersOf(
         bytes32 partyId

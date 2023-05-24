@@ -2,6 +2,13 @@
 pragma solidity ^0.8.17;
 
 contract Math {
+    function genPartyId(
+        address[] memory addrs,
+        address governance
+    ) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(addrs, block.timestamp, governance));
+    }
+
     function hasVoted(
         uint256 sum,
         uint256 targetIndex
@@ -41,7 +48,7 @@ contract Math {
         uint256[] memory result = new uint256[](indexSizeResult);
         for (uint256 j = 0; j < index; j++) {
             if (ids[j] != 0) {
-                result[indexResult] = log2(ids[j]);
+                result[indexResult] = _log2(ids[j]);
                 indexResult++;
             }
         }
@@ -49,7 +56,7 @@ contract Math {
         return result;
     }
 
-    function log2(uint256 value) internal pure returns (uint256) {
+    function _log2(uint256 value) internal pure returns (uint256) {
         uint256 result = 0;
         unchecked {
             if (value >> 128 > 0) {
