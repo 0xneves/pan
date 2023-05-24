@@ -23,14 +23,14 @@ contract Party {
         members[partyId] = addrs;
     }
 
-    function _canJoin(
+    function _addrIsIndexed(
         bytes32 partyId,
         uint256 index,
-        address addr
+        address member
     ) internal view returns (bool) {
         return
-            addr == members[partyId][index] ||
-            addr == IHelper(members[partyId][index]).owner();
+            member == members[partyId][index] ||
+            member == IHelper(members[partyId][index]).owner();
     }
 
     function _getMembersOf(

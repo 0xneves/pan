@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {IStories} from "./IStories.sol";
+
 interface IController {
     function deploy(
         bytes32 partyId,
@@ -30,23 +32,27 @@ interface IController {
 
     function getDeployTime() external view returns (uint256);
 
+    function propose(
+        bytes32 partyId,
+        IStories.ProposalType proposalType,
+        address member,
+        string memory newName
+    ) external;
+
     function proposeName(
         bytes32 partyId,
-        uint256 index,
         address member,
         string memory newName
     ) external;
 
     function proposeSymbol(
         bytes32 partyId,
-        uint256 index,
         address member,
         string memory newSymbol
     ) external;
 
     function proposeURI(
         bytes32 partyId,
-        uint256 index,
         address member,
         string memory newURI
     ) external;

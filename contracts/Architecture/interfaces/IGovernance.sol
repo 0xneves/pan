@@ -22,7 +22,7 @@ interface IGovernance {
         address addr
     ) external view returns (bool);
 
-    function addrIsMember(
+    function addrIsOperator(
         bytes32 partyId,
         address addr
     ) external view returns (bool);

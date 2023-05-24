@@ -9,6 +9,7 @@ import "./helpers/Health.sol";
 
 import "./interfaces/IController.sol";
 import "./interfaces/IGovernance.sol";
+import "./interfaces/IStories.sol";
 
 error MustReachZeroHealthPoints();
 error NotEnoughVotes();
@@ -17,12 +18,12 @@ error InvalidIndex();
 contract NFT is INFT, IERC165, ERC721, Health {
     IController public CONTROLLER;
     IGovernance public GOVERNANCE;
-    bytes32 public PARTY_ID;
 
     string public URI;
     string public NAME;
     string public SYMBOL;
 
+    bytes32 public PARTY_ID;
     uint256 private LAST_EPOCH;
     uint256 private TOTAL_MEMBERS;
 
@@ -73,18 +74,6 @@ contract NFT is INFT, IERC165, ERC721, Health {
         LAST_EPOCH = CONTROLLER.getCurrentEpoch();
     }
 
-    function proposeName(string memory newName, uint256 index) public {
-        CONTROLLER.proposeName(PARTY_ID, index, msg.sender, newName);
-    }
-
-    function proposeSymbol(string memory newSymbol, uint256 index) public {
-        CONTROLLER.proposeSymbol(PARTY_ID, index, msg.sender, newSymbol);
-    }
-
-    function proposeURI(string memory newURI, uint256 index) public {
-        CONTROLLER.proposeURI(PARTY_ID, index, msg.sender, newURI);
-    }
-
     function kill() public {
         if (getHealth() != 0) {
             revert MustReachZeroHealthPoints();
@@ -93,6 +82,33 @@ contract NFT is INFT, IERC165, ERC721, Health {
         _burn(1);
 
         payable(msg.sender).transfer(address(this).balance);
+    }
+
+    function proposeName(string memory newName) public {
+        CONTROLLER.propose(
+            PARTY_ID,
+            IStories.ProposalType.Name,
+            msg.sender,
+            newName
+        );
+    }
+
+    function proposeSymbol(string memory newSymbol) public {
+        CONTROLLER.propose(
+            PARTY_ID,
+            IStories.ProposalType.Symbol,
+            msg.sender,
+            newSymbol
+        );
+    }
+
+    function proposeURI(string memory newURI) public {
+        CONTROLLER.propose(
+            PARTY_ID,
+            IStories.ProposalType.URI,
+            msg.sender,
+            newURI
+        );
     }
 
     function getHealth() public view returns (uint256) {

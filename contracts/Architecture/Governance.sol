@@ -5,12 +5,12 @@ import "./helpers/Math.sol";
 import "./Stories.sol";
 import "./Party.sol";
 
-error AlreadyInTheParty();
+error AlreadyJoined();
 error AlreadyVoted();
 error NotInvited();
 
 contract Governance is Party, Math, Stories {
-    mapping(bytes32 => mapping(address => bool)) private belong;
+    mapping(bytes32 => mapping(address => bool)) private operator;
     mapping(bytes32 => mapping(bytes4 => uint256)) private votes;
 
     function create(address[] memory addrs) public returns (bytes32) {
@@ -22,15 +22,15 @@ contract Governance is Party, Math, Stories {
     }
 
     function join(bytes32 partyId, uint256 index) public {
-        if (!_canJoin(partyId, index, msg.sender)) {
+        if (!_addrIsIndexed(partyId, index, msg.sender)) {
             revert NotInvited();
         }
 
-        if (belong[partyId][msg.sender]) {
-            revert AlreadyInTheParty();
+        if (addrIsOperator(partyId, msg.sender)) {
+            revert AlreadyJoined();
         }
 
-        belong[partyId][msg.sender] = true;
+        operator[partyId][msg.sender] = true;
     }
 
     function _vote(bytes32 partyId, bytes4 funId, uint256 index) internal {
@@ -67,16 +67,14 @@ contract Governance is Party, Math, Stories {
         uint256 index,
         address addr
     ) public view returns (bool) {
-        address[] memory members = _getMembersOf(partyId);
-        return
-            addr == members[index] || addr == IHelper(members[index]).owner();
+        return _addrIsIndexed(partyId, index, addr);
     }
 
-    function addrIsMember(
+    function addrIsOperator(
         bytes32 partyId,
         address addr
     ) public view returns (bool) {
-        return belong[partyId][addr];
+        return operator[partyId][addr];
     }
 
     function getMembersOf(

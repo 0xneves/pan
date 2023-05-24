@@ -6,13 +6,11 @@ interface INFT {
 
     function kill() external;
 
-    function proposeStory(string memory newStory, uint256 index) external;
+    function proposeName(string memory newName) external;
 
-    function proposeName(string memory newName, uint256 index) external;
+    function proposeSymbol(string memory newSymbol) external;
 
-    function proposeSymbol(string memory newSymbol, uint256 index) external;
-
-    function proposeURI(string memory newURI, uint256 index) external;
+    function proposeURI(string memory newURI) external;
 
     function getHealth() external view returns (uint256);
 
