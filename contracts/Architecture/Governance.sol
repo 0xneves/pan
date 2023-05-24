@@ -2,25 +2,19 @@
 pragma solidity ^0.8.17;
 
 import "./helpers/Math.sol";
+import "./Stories.sol";
 import "./Party.sol";
 
-error AlreadyVoted();
 error AlreadyInTheParty();
-error EmptyParty();
+error AlreadyVoted();
 error NotInvited();
 
-contract Governance is Party, Math {
+contract Governance is Party, Math, Stories {
     mapping(bytes32 => mapping(address => bool)) private belong;
-    mapping(bytes32 => uint256) private votes;
-
-    mapping(bytes32 => mapping(bytes4 => uint256)) private votes2;
+    mapping(bytes32 => mapping(bytes4 => uint256)) private votes;
 
     function create(address[] memory addrs) public returns (bytes32) {
         bytes32 partyId = genPartyId(addrs, address(this));
-
-        if (addrs.length == 0) {
-            revert EmptyParty();
-        }
 
         _create(partyId, addrs);
 
@@ -39,26 +33,33 @@ contract Governance is Party, Math {
         belong[partyId][msg.sender] = true;
     }
 
-    function _vote(bytes32 partyId, uint256 index) internal {
-        if (hasVoted(votes[partyId], index)) {
+    function _vote(bytes32 partyId, bytes4 funId, uint256 index) internal {
+        if (hasVoted(votes[partyId][funId], index)) {
             revert AlreadyVoted();
         }
 
-        votes[partyId] += 2 ** index;
+        votes[partyId][funId] += 2 ** index;
     }
 
-    function votesFor(bytes32 partyId) public view returns (uint256) {
-        return votes[partyId];
+    function _voteIsAccepted(
+        bytes32 partyId,
+        bytes4 funId
+    ) internal view returns (bool) {
+        return 2 ** _getTotalMembersOf(partyId) == votes[partyId][funId];
+    }
+
+    function votesFor(
+        bytes32 partyId,
+        bytes4 funId
+    ) public view returns (uint256) {
+        return votes[partyId][funId];
     }
 
     function alreadyVoted(
-        bytes32 partyId
+        bytes32 partyId,
+        bytes4 funId
     ) public view returns (uint256[] memory) {
-        return decompose(votes[partyId]);
-    }
-
-    function voteIsAccepted(bytes32 partyId) public view returns (bool) {
-        return 2 ** _getTotalMembersOf(partyId) == votesFor(partyId);
+        return decompose(votes[partyId][funId]);
     }
 
     function addrIsIndexed(
@@ -66,7 +67,7 @@ contract Governance is Party, Math {
         uint256 index,
         address addr
     ) public view returns (bool) {
-        address[] memory members = getMembersOf(partyId);
+        address[] memory members = _getMembersOf(partyId);
         return
             addr == members[index] || addr == IHelper(members[index]).owner();
     }
@@ -86,5 +87,12 @@ contract Governance is Party, Math {
 
     function getTotalMembersOf(bytes32 partyId) public view returns (uint256) {
         return _getTotalMembersOf(partyId);
+    }
+
+    function getAddrIndex(
+        bytes32 partyId,
+        address addr
+    ) public view returns (uint256 index) {
+        return _getAddrIndex(partyId, addr);
     }
 }

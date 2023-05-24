@@ -13,8 +13,10 @@ import "./helpers/Epoch.sol";
 error AllMustVote();
 error AlreadyAccepted();
 error AlreadyUpgraded();
+error InvalidCaller();
 error InvalidMember();
 error InvalidIndex();
+error NotEnoughVotes();
 error NotEveryoneVoted();
 
 contract Controller is IController, IERC165, Governance, Deployer, Epoch {
@@ -24,8 +26,10 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         string memory symbol,
         string memory uri
     ) public {
+        bytes4 funId = this.deploy.selector;
+
         // vote must be approved, meaning all members have joined and voted
-        if (!voteIsAccepted(partyId)) {
+        if (!_voteIsAccepted(partyId, funId)) {
             revert AllMustVote();
         }
 
@@ -45,9 +49,9 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         );
     }
 
-    function vote(bytes32 partyId, uint256 index) public {
+    function vote(bytes32 partyId, bytes4 funId, uint256 index) public {
         // Governance - Vote already accepted
-        if (voteIsAccepted(partyId)) {
+        if (_voteIsAccepted(partyId, funId)) {
             revert AlreadyAccepted();
         }
 
@@ -66,7 +70,86 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
             revert AlreadyUpgraded();
         }
 
-        _vote(partyId, index);
+        _vote(partyId, funId, index);
+    }
+
+    function proposeName(
+        bytes32 partyId,
+        uint256 index,
+        address member,
+        string memory newName
+    ) public {
+        address addr = deployedAddr(partyId);
+        bytes4 funId = INFT(addr).proposeName.selector;
+
+        if (msg.sender != addr || msg.sender != member) {
+            revert InvalidCaller();
+        }
+
+        if (voteIsAccepted(partyId, funId)) {
+            revert AlreadyAccepted();
+        }
+
+        if (!addrIsIndexed(partyId, index, member)) {
+            revert InvalidIndex();
+        }
+
+        _proposeStories(partyId, getCurrentEpoch(), newName, "", "");
+    }
+
+    function proposeSymbol(
+        bytes32 partyId,
+        uint256 index,
+        address member,
+        string memory newSymbol
+    ) public {
+        address addr = deployedAddr(partyId);
+        bytes4 funId = INFT(addr).proposeSymbol.selector;
+
+        if (msg.sender != addr || msg.sender != member) {
+            revert InvalidCaller();
+        }
+
+        if (voteIsAccepted(partyId, funId)) {
+            revert AlreadyAccepted();
+        }
+
+        if (!addrIsIndexed(partyId, index, member)) {
+            revert InvalidIndex();
+        }
+
+        _proposeStories(partyId, getCurrentEpoch(), "", newSymbol, "");
+    }
+
+    function proposeURI(
+        bytes32 partyId,
+        uint256 index,
+        address member,
+        string memory newURI
+    ) public {
+        address addr = deployedAddr(partyId);
+        bytes4 funId = INFT(addr).proposeURI.selector;
+
+        if (msg.sender != addr || msg.sender != member) {
+            revert InvalidCaller();
+        }
+
+        if (voteIsAccepted(partyId, funId)) {
+            revert AlreadyAccepted();
+        }
+
+        if (!addrIsIndexed(partyId, index, member)) {
+            revert InvalidIndex();
+        }
+
+        _proposeStories(partyId, getCurrentEpoch(), "", "", newURI);
+    }
+
+    function voteIsAccepted(
+        bytes32 partyId,
+        bytes4 funId
+    ) public view returns (bool) {
+        return _voteIsAccepted(partyId, funId);
     }
 
     function getHealthFrom(bytes32 partyId) public view returns (uint256) {
@@ -93,6 +176,10 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
 
     function getDeployTime() public view returns (uint256) {
         return deployTime();
+    }
+
+    function getDeployedAddr(bytes32 partyId) public view returns (address) {
+        return deployedAddr(partyId);
     }
 
     function _contractOf(bytes32 partyId) internal view returns (INFT) {

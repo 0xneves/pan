@@ -6,9 +6,13 @@ interface INFT {
 
     function kill() external;
 
-    function changeName() external;
+    function proposeStory(string memory newStory, uint256 index) external;
 
-    function changeBaseURI() external;
+    function proposeName(string memory newName, uint256 index) external;
+
+    function proposeSymbol(string memory newSymbol, uint256 index) external;
+
+    function proposeURI(string memory newURI, uint256 index) external;
 
     function getHealth() external view returns (uint256);
 
@@ -17,6 +21,8 @@ interface INFT {
     function getLastEpoch() external view returns (uint256);
 
     function getTotalMembers() external view returns (uint256);
+
+    function getAddrIndex(address addr) external view returns (uint256);
 
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 }

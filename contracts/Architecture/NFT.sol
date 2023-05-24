@@ -8,24 +8,44 @@ import "./interfaces/INFT.sol";
 import "./helpers/Health.sol";
 
 import "./interfaces/IController.sol";
+import "./interfaces/IGovernance.sol";
+
+error MustReachZeroHealthPoints();
+error NotEnoughVotes();
+error InvalidIndex();
 
 contract NFT is INFT, IERC165, ERC721, Health {
     IController public CONTROLLER;
+    IGovernance public GOVERNANCE;
+    bytes32 public PARTY_ID;
+
     string public URI;
+    string public NAME;
+    string public SYMBOL;
 
     uint256 private LAST_EPOCH;
     uint256 private TOTAL_MEMBERS;
 
     constructor(
+        bytes32 _partyId,
         address _controller,
         uint256 _totalMembers,
         string memory _name,
         string memory _symbol,
         string memory _uri
     ) ERC721(_name, _symbol) {
+        PARTY_ID = _partyId;
         URI = _uri;
         TOTAL_MEMBERS = _totalMembers;
         CONTROLLER = IController(_controller);
+    }
+
+    function name() public view virtual override returns (string memory) {
+        return NAME;
+    }
+
+    function symbol() public view virtual override returns (string memory) {
+        return SYMBOL;
     }
 
     function upgrade() public payable {
@@ -48,15 +68,32 @@ contract NFT is INFT, IERC165, ERC721, Health {
         // This - Charge fee
         // This - Save story of each member
         // This - emit events
+
+        // Update Last Epoch at the end
+        LAST_EPOCH = CONTROLLER.getCurrentEpoch();
     }
 
-    function kill() public {}
-
-    function changeName() public {
-        // bytes4 selector = INFT(address(this)).changeName.selector;
+    function proposeName(string memory newName, uint256 index) public {
+        CONTROLLER.proposeName(PARTY_ID, index, msg.sender, newName);
     }
 
-    function changeBaseURI() public {}
+    function proposeSymbol(string memory newSymbol, uint256 index) public {
+        CONTROLLER.proposeSymbol(PARTY_ID, index, msg.sender, newSymbol);
+    }
+
+    function proposeURI(string memory newURI, uint256 index) public {
+        CONTROLLER.proposeURI(PARTY_ID, index, msg.sender, newURI);
+    }
+
+    function kill() public {
+        if (getHealth() != 0) {
+            revert MustReachZeroHealthPoints();
+        }
+
+        _burn(1);
+
+        payable(msg.sender).transfer(address(this).balance);
+    }
 
     function getHealth() public view returns (uint256) {
         return _getHealth(LAST_EPOCH, CONTROLLER.getCurrentEpoch());
@@ -72,6 +109,10 @@ contract NFT is INFT, IERC165, ERC721, Health {
 
     function getTotalMembers() public view returns (uint256) {
         return TOTAL_MEMBERS;
+    }
+
+    function getAddrIndex(address addr) public view returns (uint256) {
+        return GOVERNANCE.getAddrIndex(PARTY_ID, addr);
     }
 
     function _baseURI() internal view override returns (string memory) {
