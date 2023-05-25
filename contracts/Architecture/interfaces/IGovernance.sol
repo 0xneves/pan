@@ -6,20 +6,21 @@ interface IGovernance {
 
     function join(bytes32 partyId, uint256 index) external;
 
-    function votePassed(
-        bytes32 partyId,
-        bytes4 funId
-    ) external view returns (bool);
+    function votePassed(bytes32 partyId) external view returns (bool);
 
-    function votesFor(
-        bytes32 partyId,
-        bytes4 funId
-    ) external view returns (uint256);
+    function votesOf(bytes32 partyId) external view returns (uint256);
 
-    function alreadyVoted(
-        bytes32 partyId,
-        bytes4 funId
+    function currentVotersOf(
+        bytes32 partyId
     ) external view returns (uint256[] memory);
+
+    function lastVoteOf(address addr) external view returns (uint256);
+
+    function getMembersOf(
+        bytes32 partyId
+    ) external view returns (address[] memory);
+
+    function getTotalMembersOf(bytes32 partyId) external view returns (uint256);
 
     function addrIsIndexed(
         bytes32 partyId,
@@ -31,12 +32,6 @@ interface IGovernance {
         bytes32 partyId,
         address addr
     ) external view returns (bool);
-
-    function getMembersOf(
-        bytes32 partyId
-    ) external view returns (address[] memory);
-
-    function getTotalMembersOf(bytes32 partyId) external view returns (uint256);
 
     function getAddrIndex(
         bytes32 partyId,

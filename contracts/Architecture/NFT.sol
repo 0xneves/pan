@@ -9,13 +9,12 @@ import "./helpers/Health.sol";
 
 import "./interfaces/IController.sol";
 import "./interfaces/IGovernance.sol";
-import "./interfaces/IStories.sol";
 
 error ALIVE();
 error DEAD();
-error AlreadyVoted();
+error AlreadyUpgraded();
 error InvalidCaller();
-error NotEveryoneVoted();
+error InvalidCallerWithIndex();
 
 contract NFT is INFT, IERC165, ERC721, Health {
     IController public CONTROLLER;
@@ -51,37 +50,47 @@ contract NFT is INFT, IERC165, ERC721, Health {
         return SYMBOL;
     }
 
-    function upgrade() public payable {
+    function upgrade(uint256 index) public payable {
         // After everybody voted, it can be called again to upgrade
         // by anybody on the party. This means that this contract will
         // upgrade the NFT if everybody voted.
 
-        // Check if NFT is alive
+        // check if NFT is alive
         if (getHealth() == 0) {
             revert DEAD();
         }
 
-        // Governance - Must validate if user is in group
+        // check if NFT was upgraded in this epoch
+        if (CONTROLLER.getCurrentEpoch() == getLastEpoch()) {
+            revert AlreadyUpgraded();
+        }
+
+        // validate if `caller` is in group
         if (GOVERNANCE.addrIsOperator(PARTY_ID, msg.sender)) {
             revert InvalidCaller();
         }
 
-        // Governance - Must validate everybody voted already
-        if (GOVERNANCE.votePassed(PARTY_ID, this.upgrade.selector)) {
-            revert NotEveryoneVoted();
+        // validate if `index` provided matches
+        if (!GOVERNANCE.addrIsIndexed(PARTY_ID, index, msg.sender)) {
+            revert InvalidCallerWithIndex();
         }
 
-        // Check if NFT was upgraded in this epoch
-        if (CONTROLLER.getCurrentEpoch() == getLastEpoch()) {
-            revert AlreadyVoted();
+        // validate if everybody voted already
+        if (GOVERNANCE.votePassed(PARTY_ID)) {
+            // set votes to 0
+            CONTROLLER.resetVotes(PARTY_ID);
+
+            // update last epoch
+            LAST_EPOCH = CONTROLLER.getCurrentEpoch();
+
+            // increment Health
+            unchecked {
+                HEALTH++;
+            }
+        } else {
+            // or vote otherwise
+            CONTROLLER.vote(PARTY_ID, index, msg.sender);
         }
-
-
-        // Governance - Must set votes uint256 to 0
-        CONTROLLER.resetVotes(PARTY_ID);
-
-        // Update Last Epoch at the end
-        LAST_EPOCH = CONTROLLER.getCurrentEpoch();
 
         // This - emit events
     }
@@ -94,33 +103,6 @@ contract NFT is INFT, IERC165, ERC721, Health {
         _burn(1);
 
         payable(msg.sender).transfer(address(this).balance);
-    }
-
-    function proposeName(string memory newName) public {
-        CONTROLLER.propose(
-            PARTY_ID,
-            IStories.ProposalType.Name,
-            msg.sender,
-            newName
-        );
-    }
-
-    function proposeSymbol(string memory newSymbol) public {
-        CONTROLLER.propose(
-            PARTY_ID,
-            IStories.ProposalType.Symbol,
-            msg.sender,
-            newSymbol
-        );
-    }
-
-    function proposeURI(string memory newURI) public {
-        CONTROLLER.propose(
-            PARTY_ID,
-            IStories.ProposalType.URI,
-            msg.sender,
-            newURI
-        );
     }
 
     function getHealth() public view returns (uint256) {

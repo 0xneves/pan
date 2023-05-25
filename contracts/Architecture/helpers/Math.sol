@@ -9,10 +9,10 @@ contract Math {
         return keccak256(abi.encodePacked(addrs, block.timestamp, governance));
     }
 
-    function hasVoted(
+    function _hasVoted(
         uint256 sum,
         uint256 targetIndex
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         uint256 index = 0;
 
         while (sum > 0) {

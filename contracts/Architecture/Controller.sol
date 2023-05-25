@@ -15,11 +15,11 @@ error AlreadyDeployed();
 error AlreadyUpgraded();
 error InvalidCaller();
 error InvalidCallerWithIndex();
-error InvalidDeployFunId(bytes4);
+error InvalidDeployFunId();
+error InvalidLengthsProvided();
 error InvalidProposalType();
 error NotDeployedYet();
 error NotEnoughVotes();
-error NotEveryoneVoted();
 
 contract Controller is IController, IERC165, Governance, Deployer, Epoch {
     function deploy(
@@ -28,7 +28,7 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         string memory symbol,
         string memory uri
     ) public {
-        if (!votePassed(partyId, this.deploy.selector)) {
+        if (!votePassed(partyId)) {
             revert NotEnoughVotes();
         }
 
@@ -40,6 +40,18 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
             revert AlreadyDeployed();
         }
 
+        if (
+            bytes(name).length == 0 ||
+            bytes(name).length > 100 ||
+            bytes(symbol).length == 0 ||
+            bytes(symbol).length > 7 ||
+            bytes(uri).length == 0
+        ) {
+            revert InvalidLengthsProvided();
+        }
+
+        _resetVotes(partyId);
+
         _deploy(
             partyId,
             address(this),
@@ -50,38 +62,38 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         );
     }
 
-    function vote(bytes32 partyId, bytes4 funId, uint256 index) public {
-        // if the deployed address doesn't exist
-        // we assume the party is voting for a deployment
-        if (!isDeployed(partyId)) {
-            bytes4 deployFunId = this.deploy.selector;
-            // make sure that functionId matches deployer's
-            if (deployFunId != funId) {
-                // reverts otherwise
-                revert InvalidDeployFunId(funId);
-            }
-            // if the deployed address exists
-        } else {
-            // verify if the partyId contract voted already
+    function vote(bytes32 partyId, uint256 index, address member) public {
+        // if the NFT contract is deployed
+        if (isDeployed(partyId)) {
+            // verify if the NFT contract voted already
             if (_contractOf(partyId).getLastEpoch() == _currentEpoch()) {
                 // reverts if it did
                 revert AlreadyUpgraded();
             }
         }
 
-        if (votePassed(partyId, funId)) {
-            revert AlreadyAccepted();
+        // if `member` is the caller, he should validate him as an operator
+        if (member == msg.sender) {
+            if (!addrIsOperator(partyId, member)) {
+                revert InvalidCaller();
+            }
+
+            if (!addrIsIndexed(partyId, index, member)) {
+                revert InvalidCallerWithIndex();
+            }
+
+            if (votePassed(partyId)) {
+                revert AlreadyAccepted();
+            }
+        } else {
+            // and if the NFT contract is the `caller` himself,
+            // means he already validated the same things
+            if (address(_contractOf(partyId)) != msg.sender) {
+                revert InvalidCaller();
+            }
         }
 
-        if (!addrIsOperator(partyId, msg.sender)) {
-            revert InvalidCaller();
-        }
-
-        if (!addrIsIndexed(partyId, index, msg.sender)) {
-            revert InvalidCallerWithIndex();
-        }
-
-        _vote(partyId, funId, index);
+        _vote(partyId, index, _currentEpoch());
     }
 
     function resetVotes(bytes32 partyId) public {
@@ -89,64 +101,7 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
             revert InvalidCaller();
         }
 
-        bytes4[] memory funId = new bytes4[](4);
-        funId[0] = NFT.upgrade.selector;
-        funId[1] = NFT.proposeName.selector;
-        funId[2] = NFT.proposeSymbol.selector;
-        funId[3] = NFT.proposeURI.selector;
-
-        _resetVotes(partyId, funId);
-    }
-
-    function propose(
-        bytes32 partyId,
-        IStories.ProposalType proposalType,
-        address member,
-        string memory data
-    ) public {
-        if (_deployedAddr(partyId) == address(0)) {
-            revert NotDeployedYet();
-        }
-
-        INFT nftContract = _contractOf(partyId);
-
-        // if the nft contract is the `msg.sender`,then the `member`
-        // var should be trusted if validated as the operator.
-        if (address(nftContract) == msg.sender) {
-            if (!addrIsOperator(partyId, member)) {
-                revert InvalidCaller();
-            }
-            // if the `msg.sender` is not the nft contract, means
-            // this function is being called on the Controller
-            // itself. Therefore, the `msg.sender` should
-            // be used instead of the `member`.
-        } else if (!addrIsOperator(partyId, msg.sender)) {
-            revert InvalidCaller();
-        }
-
-        // to validate this step we need to know which
-        // proposalType was given by the caller. Then
-        // retrieve the functionId of the proposalType.
-        bytes4 funId;
-        // if the proposalType is Name, then the functionId
-        // should be the selector of the `proposeName`
-        // function of the nft contract.
-        if (IStories.ProposalType.Name == proposalType) {
-            funId = nftContract.proposeName.selector;
-            _proposeStories(partyId, _currentEpoch(), data, "", "");
-        } else if (IStories.ProposalType.Symbol == proposalType) {
-            funId = nftContract.proposeSymbol.selector;
-            _proposeStories(partyId, _currentEpoch(), "", data, "");
-        } else if (IStories.ProposalType.URI == proposalType) {
-            funId = nftContract.proposeURI.selector;
-            _proposeStories(partyId, _currentEpoch(), "", "", data);
-        } else {
-            revert InvalidProposalType();
-        }
-
-        if (votePassed(partyId, funId)) {
-            revert AlreadyAccepted();
-        }
+        _resetVotes(partyId);
     }
 
     function getHealth(bytes32 partyId) public view returns (uint256) {

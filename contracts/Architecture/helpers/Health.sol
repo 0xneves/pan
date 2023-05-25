@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 contract Health {
-    uint256 health;
+    uint256 HEALTH;
 
     function _missingHealth(
         uint256 lastEpoch,
@@ -25,7 +25,7 @@ contract Health {
         uint256 lastEpoch,
         uint256 currEpoch
     ) internal view returns (uint256) {
-        int t = int(health) - int(_missingHealth(lastEpoch, currEpoch));
+        int t = int(HEALTH) - int(_missingHealth(lastEpoch, currEpoch));
         if (t > 0) {
             return uint256(t);
         } else {

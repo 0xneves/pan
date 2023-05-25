@@ -2,15 +2,9 @@
 pragma solidity ^0.8.17;
 
 interface INFT {
-    function upgrade() external payable;
+    function upgrade(uint256 index) external payable;
 
     function kill() external;
-
-    function proposeName(string memory newName) external;
-
-    function proposeSymbol(string memory newSymbol) external;
-
-    function proposeURI(string memory newURI) external;
 
     function getHealth() external view returns (uint256);
 

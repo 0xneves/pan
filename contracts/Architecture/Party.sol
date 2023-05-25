@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./interfaces/IHelper.sol";
+import "./interfaces/IOwnable.sol";
 
 error PartyAlreadyCreated();
 error PartyNotHostingAddress();
@@ -30,7 +30,7 @@ contract Party {
     ) internal view returns (bool) {
         return
             member == members[partyId][index] ||
-            member == IHelper(members[partyId][index]).owner();
+            member == IOwnable(members[partyId][index]).owner();
     }
 
     function _getMembersOf(
