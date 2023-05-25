@@ -19,8 +19,8 @@ interface IStories {
         uint256 epoch
     ) external view returns (string memory);
 
-    function _getStory(
+    function getStories(
         bytes32 partyId,
         uint256 epoch
-    ) external view returns (MyStories memory);
+    ) external view returns (IStories.MyStories memory);
 }

@@ -6,6 +6,11 @@ interface IGovernance {
 
     function join(bytes32 partyId, uint256 index) external;
 
+    function votePassed(
+        bytes32 partyId,
+        bytes4 funId
+    ) external view returns (bool);
+
     function votesFor(
         bytes32 partyId,
         bytes4 funId

@@ -13,10 +13,6 @@ contract Epoch {
         return (_lifespan() / EPOCH) + 1;
     }
 
-    function _virtualEpoch() internal view returns (uint256) {
-        return _currentEpoch() + 1;
-    }
-
     function _lifespan() internal view returns (uint256) {
         return (block.timestamp - DEPLOY_TIME);
     }

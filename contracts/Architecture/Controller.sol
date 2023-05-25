@@ -17,7 +17,7 @@ error InvalidCaller();
 error InvalidCallerWithIndex();
 error InvalidDeployFunId(bytes4);
 error InvalidProposalType();
-error NoDeployYet();
+error NotDeployedYet();
 error NotEnoughVotes();
 error NotEveryoneVoted();
 
@@ -28,7 +28,7 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         string memory symbol,
         string memory uri
     ) public {
-        if (!_votePassed(partyId, this.deploy.selector)) {
+        if (!votePassed(partyId, this.deploy.selector)) {
             revert NotEnoughVotes();
         }
 
@@ -36,7 +36,7 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
             revert InvalidCaller();
         }
 
-        if (_deployedAddr(partyId) != address(0)) {
+        if (isDeployed(partyId)) {
             revert AlreadyDeployed();
         }
 
@@ -52,9 +52,10 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
 
     function vote(bytes32 partyId, bytes4 funId, uint256 index) public {
         // if the deployed address doesn't exist
-        if (_deployedAddr(partyId) == address(0)) {
+        // we assume the party is voting for a deployment
+        if (!isDeployed(partyId)) {
             bytes4 deployFunId = this.deploy.selector;
-            // verify if functionId matches deployer's
+            // make sure that functionId matches deployer's
             if (deployFunId != funId) {
                 // reverts otherwise
                 revert InvalidDeployFunId(funId);
@@ -83,6 +84,20 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         _vote(partyId, funId, index);
     }
 
+    function resetVotes(bytes32 partyId) public {
+        if (address(_contractOf(partyId)) != msg.sender) {
+            revert InvalidCaller();
+        }
+
+        bytes4[] memory funId = new bytes4[](4);
+        funId[0] = NFT.upgrade.selector;
+        funId[1] = NFT.proposeName.selector;
+        funId[2] = NFT.proposeSymbol.selector;
+        funId[3] = NFT.proposeURI.selector;
+
+        _resetVotes(partyId, funId);
+    }
+
     function propose(
         bytes32 partyId,
         IStories.ProposalType proposalType,
@@ -90,13 +105,13 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         string memory data
     ) public {
         if (_deployedAddr(partyId) == address(0)) {
-            revert NoDeployYet();
+            revert NotDeployedYet();
         }
 
-        INFT nftContract = INFT(_deployedAddr(partyId));
+        INFT nftContract = _contractOf(partyId);
 
         // if the nft contract is the `msg.sender`,then the `member`
-        // should be trusted if validated as the operator.
+        // var should be trusted if validated as the operator.
         if (address(nftContract) == msg.sender) {
             if (!addrIsOperator(partyId, member)) {
                 revert InvalidCaller();
@@ -129,48 +144,21 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
             revert InvalidProposalType();
         }
 
-        if (_votePassed(partyId, funId)) {
-            revert AlreadyAccepted();
-        }
-    }
-
-    function _validateProposal(
-        bytes32 partyId,
-        bytes4 funId,
-        address nftContract
-    ) internal view {
-        if (msg.sender != nftContract || !addrIsOperator(partyId, msg.sender)) {
-            revert InvalidCaller();
-        }
-
         if (votePassed(partyId, funId)) {
             revert AlreadyAccepted();
         }
     }
 
-    function votePassed(
-        bytes32 partyId,
-        bytes4 funId
-    ) public view returns (bool) {
-        return _votePassed(partyId, funId);
-    }
-
-    function getHealthFrom(bytes32 partyId) public view returns (uint256) {
+    function getHealth(bytes32 partyId) public view returns (uint256) {
         return _contractOf(partyId).getHealth();
     }
 
-    function getMissingHealthFrom(
-        bytes32 partyId
-    ) public view returns (uint256) {
+    function getMissingHealth(bytes32 partyId) public view returns (uint256) {
         return _contractOf(partyId).getMissingHealth();
     }
 
     function getCurrentEpoch() public view returns (uint256) {
         return _currentEpoch();
-    }
-
-    function getVirtualEpoch() public view returns (uint256) {
-        return _virtualEpoch();
     }
 
     function getLifeSpan() public view returns (uint256) {

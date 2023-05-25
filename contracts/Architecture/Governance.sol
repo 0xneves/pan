@@ -41,10 +41,16 @@ contract Governance is Party, Stories, Math {
         votes[partyId][funId] += 2 ** index;
     }
 
-    function _votePassed(
+    function _resetVotes(bytes32 partyId, bytes4[] memory funId) internal {
+        for (uint256 i = 0; i < funId.length; i++) {
+            votes[partyId][funId[i]] = 0;
+        }
+    }
+
+    function votePassed(
         bytes32 partyId,
         bytes4 funId
-    ) internal view returns (bool) {
+    ) public view returns (bool) {
         return 2 ** _getTotalMembersOf(partyId) == votes[partyId][funId];
     }
 

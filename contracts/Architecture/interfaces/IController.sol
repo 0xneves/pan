@@ -13,24 +13,7 @@ interface IController {
 
     function vote(bytes32 partyId, bytes4 funId, uint256 index) external;
 
-    function votePassed(
-        bytes32 partyId,
-        bytes4 funId
-    ) external view returns (bool);
-
-    function getHealthFrom(bytes32 partyId) external view returns (uint256);
-
-    function getMissingHealthFrom(
-        bytes32 partyId
-    ) external view returns (uint256);
-
-    function getCurrentEpoch() external view returns (uint256);
-
-    function getVirtualEpoch() external view returns (uint256);
-
-    function getLifeSpan() external view returns (uint256);
-
-    function getDeployTime() external view returns (uint256);
+    function resetVotes(bytes32 partyId) external;
 
     function propose(
         bytes32 partyId,
@@ -38,6 +21,16 @@ interface IController {
         address member,
         string memory data
     ) external;
+
+    function getHealth(bytes32 partyId) external view returns (uint256);
+
+    function getMissingHealth(bytes32 partyId) external view returns (uint256);
+
+    function getCurrentEpoch() external view returns (uint256);
+
+    function getLifeSpan() external view returns (uint256);
+
+    function getDeployTime() external view returns (uint256);
 
     function getDeployedAddr(bytes32 partyId) external view returns (address);
 

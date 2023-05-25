@@ -11,9 +11,11 @@ import "./interfaces/IController.sol";
 import "./interfaces/IGovernance.sol";
 import "./interfaces/IStories.sol";
 
-error MustReachZeroHealthPoints();
-error NotEnoughVotes();
-error InvalidIndex();
+error ALIVE();
+error DEAD();
+error AlreadyVoted();
+error InvalidCaller();
+error NotEveryoneVoted();
 
 contract NFT is INFT, IERC165, ERC721, Health {
     IController public CONTROLLER;
@@ -50,33 +52,43 @@ contract NFT is INFT, IERC165, ERC721, Health {
     }
 
     function upgrade() public payable {
-        // This should be called once by all or vote directly
         // After everybody voted, it can be called again to upgrade
         // by anybody on the party. This means that this contract will
-        // allow msg.sender to vote if he is in the party. Or it will
         // upgrade the NFT if everybody voted.
-        //
-        // This - Check if NFT is alive
-        // This - Check if NFT was upgraded in this epoch
-        //
+
+        // Check if NFT is alive
+        if (getHealth() == 0) {
+            revert DEAD();
+        }
+
         // Governance - Must validate if user is in group
+        if (GOVERNANCE.addrIsOperator(PARTY_ID, msg.sender)) {
+            revert InvalidCaller();
+        }
+
         // Governance - Must validate everybody voted already
-        //
-        // This - Upgrade approved by governance
+        if (GOVERNANCE.votePassed(PARTY_ID, this.upgrade.selector)) {
+            revert NotEveryoneVoted();
+        }
+
+        // Check if NFT was upgraded in this epoch
+        if (CONTROLLER.getCurrentEpoch() == getLastEpoch()) {
+            revert AlreadyVoted();
+        }
+
+
         // Governance - Must set votes uint256 to 0
-        // Governance - Must check pending voting for name or uri change
-        // This - Update name or uri if needed
-        // This - Charge fee
-        // This - Save story of each member
-        // This - emit events
+        CONTROLLER.resetVotes(PARTY_ID);
 
         // Update Last Epoch at the end
         LAST_EPOCH = CONTROLLER.getCurrentEpoch();
+
+        // This - emit events
     }
 
     function kill() public {
         if (getHealth() != 0) {
-            revert MustReachZeroHealthPoints();
+            revert ALIVE();
         }
 
         _burn(1);

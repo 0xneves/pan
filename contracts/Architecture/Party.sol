@@ -3,8 +3,8 @@ pragma solidity ^0.8.17;
 
 import "./interfaces/IHelper.sol";
 
-error AddressIsNotInParty();
 error PartyAlreadyCreated();
+error PartyNotHostingAddress();
 error PartyTooEmptyOrTooFull();
 
 contract Party {
@@ -60,6 +60,6 @@ contract Party {
             }
         }
 
-        revert AddressIsNotInParty();
+        revert PartyNotHostingAddress();
     }
 }
