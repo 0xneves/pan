@@ -17,6 +17,7 @@ error InvalidCaller();
 error InvalidCallerWithIndex();
 error InvalidDeployFunId(bytes4);
 error InvalidProposalType();
+error NoDeployYet();
 error NotEnoughVotes();
 error NotEveryoneVoted();
 
@@ -27,7 +28,7 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         string memory symbol,
         string memory uri
     ) public {
-        if (!_voteIsAccepted(partyId, this.deploy.selector)) {
+        if (!_votePassed(partyId, this.deploy.selector)) {
             revert NotEnoughVotes();
         }
 
@@ -35,7 +36,7 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
             revert InvalidCaller();
         }
 
-        if (deployedAddr(partyId) != address(0)) {
+        if (_deployedAddr(partyId) != address(0)) {
             revert AlreadyDeployed();
         }
 
@@ -51,7 +52,7 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
 
     function vote(bytes32 partyId, bytes4 funId, uint256 index) public {
         // if the deployed address doesn't exist
-        if (deployedAddr(partyId) == address(0)) {
+        if (_deployedAddr(partyId) == address(0)) {
             bytes4 deployFunId = this.deploy.selector;
             // verify if functionId matches deployer's
             if (deployFunId != funId) {
@@ -61,13 +62,13 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
             // if the deployed address exists
         } else {
             // verify if the partyId contract voted already
-            if (_contractOf(partyId).getLastEpoch() == currentEpoch()) {
+            if (_contractOf(partyId).getLastEpoch() == _currentEpoch()) {
                 // reverts if it did
                 revert AlreadyUpgraded();
             }
         }
 
-        if (_voteIsAccepted(partyId, funId)) {
+        if (votePassed(partyId, funId)) {
             revert AlreadyAccepted();
         }
 
@@ -86,66 +87,51 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
         bytes32 partyId,
         IStories.ProposalType proposalType,
         address member,
-        string memory newName
+        string memory data
     ) public {
-        INFT nftContract = INFT(deployedAddr(partyId));
+        if (_deployedAddr(partyId) == address(0)) {
+            revert NoDeployYet();
+        }
 
+        INFT nftContract = INFT(_deployedAddr(partyId));
+
+        // if the nft contract is the `msg.sender`,then the `member`
+        // should be trusted if validated as the operator.
+        if (address(nftContract) == msg.sender) {
+            if (!addrIsOperator(partyId, member)) {
+                revert InvalidCaller();
+            }
+            // if the `msg.sender` is not the nft contract, means
+            // this function is being called on the Controller
+            // itself. Therefore, the `msg.sender` should
+            // be used instead of the `member`.
+        } else if (!addrIsOperator(partyId, msg.sender)) {
+            revert InvalidCaller();
+        }
+
+        // to validate this step we need to know which
+        // proposalType was given by the caller. Then
+        // retrieve the functionId of the proposalType.
         bytes4 funId;
+        // if the proposalType is Name, then the functionId
+        // should be the selector of the `proposeName`
+        // function of the nft contract.
         if (IStories.ProposalType.Name == proposalType) {
             funId = nftContract.proposeName.selector;
+            _proposeStories(partyId, _currentEpoch(), data, "", "");
         } else if (IStories.ProposalType.Symbol == proposalType) {
             funId = nftContract.proposeSymbol.selector;
+            _proposeStories(partyId, _currentEpoch(), "", data, "");
         } else if (IStories.ProposalType.URI == proposalType) {
             funId = nftContract.proposeURI.selector;
+            _proposeStories(partyId, _currentEpoch(), "", "", data);
         } else {
             revert InvalidProposalType();
         }
 
-        if (voteIsAccepted(partyId, funId)) {
+        if (_votePassed(partyId, funId)) {
             revert AlreadyAccepted();
         }
-
-        if (
-            address(nftContract) != msg.sender ||
-            !addrIsOperator(partyId, msg.sender)
-        ) {
-            revert InvalidCaller();
-        }
-    }
-
-    function proposeName(
-        bytes32 partyId,
-        address member,
-        string memory newName
-    ) public {
-        address nftContract = deployedAddr(partyId);
-        bytes4 funId = INFT(nftContract).proposeName.selector;
-
-        _validateProposal(partyId, funId, nftContract);
-
-        _proposeStories(partyId, getCurrentEpoch(), newName, "", "");
-    }
-
-    function proposeSymbol(
-        bytes32 partyId,
-        address member,
-        string memory newSymbol
-    ) public {
-        address nftContract = deployedAddr(partyId);
-        bytes4 funId = INFT(nftContract).proposeSymbol.selector;
-
-        _validateProposal(partyId, funId, nftContract);
-
-        _proposeStories(partyId, getCurrentEpoch(), "", newSymbol, "");
-    }
-
-    function proposeURI(bytes32 partyId, string memory newURI) public {
-        IStories.ProposalType proposalType;
-        address nftContract = deployedAddr(partyId);
-        bytes4 funId = INFT(nftContract).proposeURI.selector;
-        _validateProposal(partyId, funId, nftContract);
-
-        _proposeStories(partyId, getCurrentEpoch(), "", "", newURI);
     }
 
     function _validateProposal(
@@ -157,16 +143,16 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
             revert InvalidCaller();
         }
 
-        if (voteIsAccepted(partyId, funId)) {
+        if (votePassed(partyId, funId)) {
             revert AlreadyAccepted();
         }
     }
 
-    function voteIsAccepted(
+    function votePassed(
         bytes32 partyId,
         bytes4 funId
     ) public view returns (bool) {
-        return _voteIsAccepted(partyId, funId);
+        return _votePassed(partyId, funId);
     }
 
     function getHealthFrom(bytes32 partyId) public view returns (uint256) {
@@ -180,31 +166,31 @@ contract Controller is IController, IERC165, Governance, Deployer, Epoch {
     }
 
     function getCurrentEpoch() public view returns (uint256) {
-        return currentEpoch();
+        return _currentEpoch();
     }
 
     function getVirtualEpoch() public view returns (uint256) {
-        return virtualEpoch();
+        return _virtualEpoch();
     }
 
     function getLifeSpan() public view returns (uint256) {
-        return lifespan();
+        return _lifespan();
     }
 
     function getDeployTime() public view returns (uint256) {
-        return deployTime();
+        return _deployTime();
     }
 
     function getDeployedAddr(bytes32 partyId) public view returns (address) {
-        return deployedAddr(partyId);
+        return _deployedAddr(partyId);
     }
 
     function isDeployed(bytes32 partyId) public view returns (bool) {
-        return deployedAddr(partyId) != address(0);
+        return _deployedAddr(partyId) != address(0);
     }
 
     function _contractOf(bytes32 partyId) internal view returns (INFT) {
-        return INFT(deployedAddr(partyId));
+        return INFT(_deployedAddr(partyId));
     }
 
     function supportsInterface(

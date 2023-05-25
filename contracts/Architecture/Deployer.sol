@@ -26,7 +26,7 @@ contract Deployer {
         deployed[partyId] = address(UntilDeathKnocks);
     }
 
-    function deployedAddr(bytes32 partyId) internal view returns (address) {
+    function _deployedAddr(bytes32 partyId) internal view returns (address) {
         return deployed[partyId];
     }
 }

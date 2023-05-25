@@ -13,7 +13,7 @@ interface IController {
 
     function vote(bytes32 partyId, bytes4 funId, uint256 index) external;
 
-    function voteIsAccepted(
+    function votePassed(
         bytes32 partyId,
         bytes4 funId
     ) external view returns (bool);
@@ -36,25 +36,7 @@ interface IController {
         bytes32 partyId,
         IStories.ProposalType proposalType,
         address member,
-        string memory newName
-    ) external;
-
-    function proposeName(
-        bytes32 partyId,
-        address member,
-        string memory newName
-    ) external;
-
-    function proposeSymbol(
-        bytes32 partyId,
-        address member,
-        string memory newSymbol
-    ) external;
-
-    function proposeURI(
-        bytes32 partyId,
-        address member,
-        string memory newURI
+        string memory data
     ) external;
 
     function getDeployedAddr(bytes32 partyId) external view returns (address);

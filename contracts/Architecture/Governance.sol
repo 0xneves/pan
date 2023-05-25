@@ -9,7 +9,7 @@ error AlreadyJoined();
 error AlreadyVoted();
 error NotInvited();
 
-contract Governance is Party, Math, Stories {
+contract Governance is Party, Stories, Math {
     mapping(bytes32 => mapping(address => bool)) private operator;
     mapping(bytes32 => mapping(bytes4 => uint256)) private votes;
 
@@ -41,7 +41,7 @@ contract Governance is Party, Math, Stories {
         votes[partyId][funId] += 2 ** index;
     }
 
-    function _voteIsAccepted(
+    function _votePassed(
         bytes32 partyId,
         bytes4 funId
     ) internal view returns (bool) {
