@@ -14,7 +14,7 @@ const ETHEREUM_MAINNET = "https://eth-mainnet.g.alchemy.com/v2/dVfk0JbYlzHpMU000
 
 const POLYGON_MAINNET = "https://polygon-mainnet.g.alchemy.com/v2/5H1rrcYkvbpo6sTW4hrOhH7glU6GHQ4v";
 
-const { PRIVATE_KEY } = process.env;
+//const { PRIVATE_KEY } = process.env;
 
 const config: HardhatUserConfig = {
   solidity: "0.8.17",
@@ -22,7 +22,7 @@ const config: HardhatUserConfig = {
   // gasReporter: {
   //   enabled: true,
   // },
-  etherscan: {
+  etherscan: { // PolygonScan actually
     apiKey: "U5CSWDUSV4PWJXAK23SUK6MVITQSVYZXV7",
   },
   networks: {
@@ -35,7 +35,7 @@ const config: HardhatUserConfig = {
     },
     polygon: {
       url: POLYGON_MAINNET,
-      accounts: [`${PRIVATE_KEY}`],
+      //accounts: [`${PRIVATE_KEY}`],
     },
   },
 };
